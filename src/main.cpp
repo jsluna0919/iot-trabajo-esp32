@@ -2,6 +2,7 @@
 #include "hardware/Sensores.h"
 #include "hardware/Alertas.h"
 #include "red/WifiClient.h"
+#include "red/GestorRed.h"
 
 // --- Configuración de Pines (Ajusta según tu conexionado físico en el S3) ---
 #define PIN_TRIG       4  //A0
@@ -17,6 +18,7 @@
 // --- Instanciación de Capas ---
 Sensores misSensores(PIN_DHT, PIN_TRIG, PIN_ECHO, PIN_LLUVIA);
 Alertas misAlertas(PIN_LED_R, PIN_LED_G, PIN_LED_B, PIN_BUZZER);
+GestorRed configurador;
 WifiClient redEstacion("Mi_Wifi_SSID", "Mi_Clave_Password", "https://iot-trabajo.onrender.com/mediciones");
 
 // Variable global para almacenar el nivel inicial de referencia (Línea base sin crecida)
@@ -26,6 +28,15 @@ unsigned long ultimoEnvioAPI = 0;
 void setup() {
     Serial.begin(115200);
     delay(2000); // Espera de cortesía para estabilizar el puerto serie del S3
+
+    Serial.println("\n=== CHEQUEO DE CONFIGURACIÓN ===");
+    configurador.inicializar();
+
+    // Si está en modo configuración, no inicializamos sensores ni API aún
+    if (configurador.esModoConfig()) {
+        Serial.println("[INFO] Esperando configuración desde el celular...");
+        return; 
+    }
     
     Serial.println("\n=== INICIANDO SISTEMA DE MONITOREO DE QUEBRADA ===");
     
